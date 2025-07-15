@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Compras</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+
+<body >
+    <h1 align="center" style="font-size: 70px;"><mark style="background-color: rgb(202, 196, 189); border-radius: 10px">🛒 Lista de Compras</mark></h1>
+
+
+    <div align="center" id="form-container">
+        <input style="border-radius: 15px;" type="text" id="nome" placeholder="Item" required>
+        <input style="border-radius: 15px;" type="number" id="quantidade" placeholder="Quantidade" required>
+        <input style="border-radius: 15px;" type="number" id="preco" placeholder="Preço" step="0.01" required>
+        <button style="border-radius: 20px;" style="border-radius: 20px;" id="adicionarBtn">Adicionar</button>
+    </div>
+
+
+    <table border="2px" style="background-color: rgb(182, 182, 182);">
+        <thead>
+            <tr style="background-color:rgb(122, 112, 112); font-size: 20px">
+                <th>Item</th>
+                <th>Quantidade</th>
+                <th>Preço</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody id="lista-compras">
+        </tbody>
+    </table>
+
+
+    <h2><mark style="background-color: rgb(202, 196, 189); border-radius: 5px">Total Geral: R$ <span id="total-geral">0.00</span></mark></h2>
+
+
+    <button style="border-radius: 20px;" id="atualizarBtn">Atualizar</button>
+    <button style="border-radius: 20px;" id="limparBtn">Limpar Lista</button>
+
+
+
+
+    <script src="script.js"></script>
+</body>
+<style>
+  body {
+      font-family: sans-serif;
+      padding: 30px;
+      background-color: rgb(231, 231, 231);
+  }
+ 
+  #form-container {
+      margin-bottom: 20px;
+  }
+ 
+  input, button {
+      padding: 10px;
+      margin-right: 10px;
+      font-size: 16px;
+  }
+ 
+  table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+  }
+ 
+  th, td {
+      padding: 10px;
+      border: 2px solid #000000;
+      text-align: center;
+  }
+  </style>
+  <script>
+    const lista = document.getElementById("lista-compras");
+    const totalGeral = document.getElementById("total-geral");
+   
+    window.onload = () => {
+        const itensSalvos = JSON.parse(localStorage.getItem("itensCompras"));
+      
+      
+        if (!itensSalvos || itensSalvos.length === 0) {
+          const itensPadrao = [
+            "Arroz", "Feijão", "Macarrão", "Farinha de Mandioca", "Farinha de Trigo",
+            "Fubá", "Café", "Óleo de Soja", "Leite", "Açúcar", "Sal", "Ovos",
+            "Biscoito", "Detergente Líquido", "Sabão em Barra", "Desinfetante",
+            "Água Sanitária", "Esponja", "Sabão em Pó", "Papel Higiênico",
+            "Papel Toalha", "Saco de Lixo", "Carne Moída", "Coxão Mole", "Bisteca Suína",
+            "Lombo Suíno", "Peito de Frango", "Coxa e Sobrecoxa", "Queijo",
+            "Presunto", "Iogurte", "Nata"
+          ];
+      
+          const itensComValores = itensPadrao.map(nome => {
+            const preco = parseFloat((Math.random() * 15 + 2).toFixed(2)); // preço aleatório entre 2 e 17
+            const quantidade = 1 + Math.floor(Math.random() * 3); // qtd entre 1 e 3
+            return {
+              nome,
+              quantidade,
+              preco,
+              total: quantidade * preco
+            };
+          });
+      
+          localStorage.setItem("itensCompras", JSON.stringify(itensComValores));
+          itensComValores.forEach(item => adicionarNaTabela(item));
+        } else {
+          itensSalvos.forEach(item => adicionarNaTabela(item));
+        }
+      
+        atualizarTotal();
+      };
+      
+   
+    document.getElementById("adicionarBtn").addEventListener("click", () => {
+        const nome = document.getElementById("nome").value;
+        const quantidade = parseInt(document.getElementById("quantidade").value);
+        const preco = parseFloat(document.getElementById("preco").value);
+   
+        if (!nome || quantidade <= 0 || preco <= 0) {
+            alert("Preencha os campos corretamente!");
+            return;
+        }
+   
+        const item = {
+            nome,
+            quantidade,
+            preco,
+            total: quantidade * preco
+        };
+   
+        const itens = JSON.parse(localStorage.getItem("itensCompras")) || [];
+        itens.push(item);
+        localStorage.setItem("itensCompras", JSON.stringify(itens));
+   
+        adicionarNaTabela(item);
+        atualizarTotal();
+        limparCampos();
+    });
+   
+    document.getElementById("atualizarBtn").addEventListener("click", () => {
+        // Aqui você pode futuramente fazer um fetch para uma API
+        alert("Atualizado com dados locais!");
+        location.reload(); // Só recarrega a página por enquanto
+    });
+
+
+    document.getElementById("limparBtn").addEventListener("click", () => {
+        if (confirm("Tem certeza que deseja apagar toda a lista?")) {
+            localStorage.removeItem("itensCompras"); // limpa os dados
+            lista.innerHTML = ""; // limpa a tabela
+            totalGeral.textContent = "0.00"; // zera o total
+        }
+    });
+
+
+    window.onload = () => {
+        const itensSalvos = JSON.parse(localStorage.getItem("itensCompras")) || [];
+        itensSalvos.forEach((item, index) => adicionarNaTabela(item, index));
+        atualizarTotal();
+    };
+
+
+    // Delegação de evento (recomendado para elementos criados dinamicamente)
+lista.addEventListener("click", function(e) {
+    if (e.target.classList.contains("removerBtn")) {
+        const index = parseInt(e.target.getAttribute("data-index"));
+        removerItem(index);
+    }
+});
+
+
+function removerItem(index) {
+    const itens = JSON.parse(localStorage.getItem("itensCompras")) || [];
+    itens.splice(index, 1); // remove só o item clicado
+    localStorage.setItem("itensCompras", JSON.stringify(itens));
+
+
+    lista.innerHTML = ""; // limpa e recria a lista
+    itens.forEach((item, i) => adicionarNaTabela(item, i));
+    atualizarTotal();
+}
+
+
+   
+   
+   
+    function adicionarNaTabela(item, index) {
+        const row = document.createElement("tr");
+   
+        row.innerHTML = `
+            <td>${item.nome}</td>
+            <td>${item.quantidade}</td>
+            <td>R$ ${item.preco.toFixed(2)}</td>
+            <td>R$ ${item.total.toFixed(2)}</td>
+            <td><button class="removerBtn" data-index="${index}">Remover</button></td>
+        `;
+   
+        lista.appendChild(row);
+    }
+   
+   
+    function atualizarTotal() {
+        const itens = JSON.parse(localStorage.getItem("itensCompras")) || [];
+        const total = itens.reduce((acc, item) => acc + item.total, 0);
+        totalGeral.textContent = total.toFixed(2);
+    }
+   
+    function limparCampos() {
+        document.getElementById("nome").value = "";
+        document.getElementById("quantidade").value = "";
+        document.getElementById("preco").value = "";
+    }
+   
+</script>
+
+
+</html>
